@@ -1,2 +1,5 @@
 *.index
 *.meta
+*.idea
+*.impl
+.idea
