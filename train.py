@@ -85,53 +85,54 @@ def gram(x, size, deep):
 
 def train():
 	# 创建一个模型
-	# model = models.Model(settings.CONTENT_IMAGE, settings.STYLE_IMAGE)
+	model = models.Model(settings.CONTENT_IMAGE, settings.STYLE_IMAGE)
 	# 创建session
 
-	ckpt = tf.train.get_checkpoint_state(settings.CHECKPOINT_PATH)
-	print(ckpt.model_checkpoint_path)
-	model = tf.train.import_meta_graph(ckpt.model_checkpoint_path + '.meta')
-	saver = tf.train.Saver(max_to_keep=1)
+	# ckpt = tf.train.get_checkpoint_state(settings.CHECKPOINT_PATH)
+	# # print(ckpt.model_checkpoint_path)
+	# model = tf.train.import_meta_graph(ckpt.model_checkpoint_path + '.meta')
+	# saver = tf.train.Saver(max_to_keep=1)
+
 	with tf.Session() as sess:
 		# 全局初始化
-		ckpt = tf.train.get_checkpoint_state(settings.CHECKPOINT_PATH)
-		if ckpt and ckpt.model_checkpoint_path:
-			saver.restore(sess, ckpt.model_checkpoint_path)
-		# sess.run(tf.global_variables_initializer())
+		# ckpt = tf.train.get_checkpoint_state(settings.CHECKPOINT_PATH)
+		# if ckpt and ckpt.model_checkpoint_path:
+		# 	saver.restore(sess, ckpt.model_checkpoint_path)
+		sess.run(tf.global_variables_initializer())
 
 		# 定义损失函数
-			cost = loss(sess, model)
+		cost = loss(sess, model)
 		# 创建优化器
-			optimizer = tf.train.AdamOptimizer(1.0).minimize(cost)
+		optimizer = tf.train.AdamOptimizer(1.0).minimize(cost)
 		# 再初始化一次（主要针对于第一次初始化后又定义的运算，不然可能会报错）
-		# sess.run(tf.global_variables_initializer())
+		sess.run(tf.global_variables_initializer())
 		# 使用噪声图片进行训练
-			sess.run(tf.assign(model.net['input'], model.random_img))
+		sess.run(tf.assign(model.net['input'], model.random_img))
 
 		# 迭代指定次数
-			for step in range(settings.TRAIN_STEPS):
-				# 进行一次反向传播
-				sess.run(optimizer)
-				# 每隔一定次数，输出一下进度，并保存当前训练结果
-				if step % 50 == 0:
-					print('step {} is down.'.format(step))
-					# 取出input的内容，这是生成的图片
-					img = sess.run(model.net['input'])
-					# 训练过程是减去均值的，这里要加上
-					img += settings.IMAGE_MEAN_VALUE
-					# 这里是一个batch_size=1的batch，所以img[0]才是图片内容
-					img = img[0]
-					# 将像素值限定在0-255，并转为整型
-					img = np.clip(img, 0, 255).astype(np.uint8)
-					# 保存图片
-					scipy.misc.imsave('{}-{}.jpg'.format(settings.OUTPUT_IMAGE, step), img)
-					saver.save(sess, settings.MODEL_SAVE_PATH, global_step=step + 1)
-		# 保存最终训练结果
-		img = sess.run(model.net['input'])
-		img += settings.IMAGE_MEAN_VALUE
-		img = img[0]
-		img = np.clip(img, 0, 255).astype(np.uint8)
-		scipy.misc.imsave('{}.jpg'.format(settings.OUTPUT_IMAGE), img)
+		for step in range(settings.TRAIN_STEPS):
+			# 进行一次反向传播
+			sess.run(optimizer)
+			# 每隔一定次数，输出一下进度，并保存当前训练结果
+			if step % 10 == 0:
+				print('step {} is down.'.format(step))
+				# 取出input的内容，这是生成的图片
+				img = sess.run(model.net['input'])
+				# 训练过程是减去均值的，这里要加上
+				img += settings.IMAGE_MEAN_VALUE
+				# 这里是一个batch_size=1的batch，所以img[0]才是图片内容
+				img = img[0]
+				# 将像素值限定在0-255，并转为整型
+				img = np.clip(img, 0, 255).astype(np.uint8)
+				# 保存图片
+				scipy.misc.imsave('{}-{}.jpg'.format(settings.OUTPUT_IMAGE, step), img)
+				# saver.save(sess, settings.MODEL_SAVE_PATH, global_step=step + 1)
+	# 保存最终训练结果
+	img = sess.run(model.net['input'])
+	img += settings.IMAGE_MEAN_VALUE
+	img = img[0]
+	img = np.clip(img, 0, 255).astype(np.uint8)
+	scipy.misc.imsave('{}.jpg'.format(settings.OUTPUT_IMAGE), img)
 
 
 if __name__ == '__main__':

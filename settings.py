@@ -30,5 +30,5 @@ ALPHA = 1
 BETA = 500
 # 训练次数
 TRAIN_STEPS = 3000
-MODEL_SAVE_PATH ='./model/image_style_change'
+MODEL_SAVE_PATH = './model/image_style_change'
 CHECKPOINT_PATH = './model'
